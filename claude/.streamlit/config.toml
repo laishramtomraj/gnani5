@@ -1,0 +1,13 @@
+[theme]
+base = "light"
+primaryColor = "#19A7A0"            # teal accent (buttons, links)
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F6FA"
+textColor = "#0B1F3F"               # navy
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
