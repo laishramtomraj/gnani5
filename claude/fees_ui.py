@@ -17,13 +17,13 @@ STATUS_LABEL = {"illustrative": "Illustrative prototype", "details_unavailable":
 
 
 @st.cache_data(show_spinner=False)
-def _problems() -> list[str]:
+def _problems(stamp: tuple) -> list[str]:
     return fl.validate()
 
 
 def data_ok() -> bool:
     """Show a clear error (only in the fee areas) if the fee data is inconsistent."""
-    problems = _problems()
+    problems = _problems(tuple((c["id"], c["name"], c["tuition"], c["years"], c["group"]) for c in fl.COURSES))
     if problems:
         st.error("The fee data has problems and cannot be shown:\n\n" + "\n".join(f"- {p}" for p in problems))
         return False
@@ -47,7 +47,7 @@ def _bullets(items) -> None:
 
 def _table(rows: list[dict], total_label: str | None = None, total: int | None = None) -> None:
     data = [{"Charge": r["label"], "When charged": FREQUENCY_LABEL[r["frequency"]],
-             "Amount": money(r["amount"]), "Times": r["times"], "Total for course": money(r["total"]),
+             "Amount": money(r["amount"]), "Times": str(r["times"]), "Total for course": money(r["total"]),
              "Note": r["note"] or ""} for r in rows]
     if total_label:
         data.append({"Charge": total_label, "When charged": "", "Amount": "", "Times": "",

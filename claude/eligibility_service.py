@@ -15,7 +15,7 @@ import course_service
 import registration_schema as schema
 from eligibility import (
     CHECK_MET, CHECK_UNMET, CHECK_UNVERIFIED, OUTCOME_INSUFFICIENT, OUTCOME_MEETS, OUTCOME_NOT_MET,
-    check_eligibility, parse_subject_requirement,
+    check_eligibility, parse_subject_requirement, subject_rule,
 )
 
 NOTICE = (
@@ -28,11 +28,17 @@ MAX_TEXT = 200
 
 # ------------------------------------------------------------------ the course
 def subject_requirement(course: dict) -> tuple[str, list[str]]:
-    """('all', [subjects]) / ('any', []) / ('unknown', []) exactly as the existing check reads the course."""
-    structured = course.get("required_subjects")
-    if structured:
-        return "all", [str(s) for s in structured]
-    return parse_subject_requirement(course.get("class12"))
+    """('all', [subjects]) / ('any', []) / ('unknown', []) exactly as eligibility.check_eligibility() reads the course.
+
+    'one of' groups are listed as 'One of: A / B'. A course whose rule is only partly stored is 'unknown'."""
+    rule = subject_rule(course)
+    if rule["any_stream"] and not rule["all"] and not rule["one_of"]:
+        return "any", []
+    if (rule["all"] or rule["one_of"]) and not rule["unverified"]:
+        listed = [s.title() for s in rule["all"]]
+        listed += ["One of: " + " / ".join(x.title() for x in g) for g in rule["one_of"]]
+        return "all", listed
+    return "unknown", []
 
 
 def routes_for(course: dict) -> list[str]:

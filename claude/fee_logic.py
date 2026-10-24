@@ -7,6 +7,7 @@ All totals are computed from fee components. Nothing is typed in twice, so nothi
   * tuition is read from the course record and counted once.
 Amounts that are None ("Not available") are listed but never added to a total, and are reported.
 """
+from collections.abc import Mapping
 from datetime import date
 
 from data import COURSES, format_inr
@@ -18,7 +19,25 @@ from fee_catalogue import (
 )
 
 NOT_AVAILABLE = "Not available"
-COURSE_BY_ID = {c["id"]: c for c in COURSES}
+
+
+class _LiveCourses(Mapping):
+    """Course lookup over the CURRENT course list (it changes when college.db changes)."""
+
+    def __getitem__(self, course_id):
+        for c in COURSES:
+            if c["id"] == course_id:
+                return c
+        raise KeyError(course_id)
+
+    def __iter__(self):
+        return iter([c["id"] for c in COURSES])
+
+    def __len__(self):
+        return len(COURSES)
+
+
+COURSE_BY_ID = _LiveCourses()
 SCHOLARSHIP_BY_ID = {s["id"]: s for s in SCHOLARSHIPS}
 LEVELS = {"Undergraduate", "Postgraduate"}
 

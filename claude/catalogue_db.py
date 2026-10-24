@@ -23,10 +23,10 @@ from data import BASE_DIR
 DB_PATH = BASE_DIR / "college.db"
 _SEED = copy.deepcopy(COURSES)               # pristine initial rows, captured before the list is synced
 
-_JSON_LISTS = ("subjects", "procedure", "documents", "careers", "higher_studies")
+_JSON_LISTS = ("subjects", "procedure", "documents", "careers", "higher_studies", "specialisations")
 _TEXT = ("name", "category", "level", "overview", "class12", "degree", "diploma", "semesters", "admission_mode")
 _INTS = ("position", "years", "tuition", "seats", "min_pct")
-_FIELDS = set(_TEXT) | set(_INTS) | set(_JSON_LISTS) | {"group", "req12"}
+_FIELDS = set(_TEXT) | set(_INTS) | set(_JSON_LISTS) | {"group", "req12", "published", "is_sample"}
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS courses (
@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS courses (
     semesters TEXT DEFAULT '', admission_mode TEXT DEFAULT '',
     subjects TEXT DEFAULT '[]', procedure TEXT DEFAULT '[]', documents TEXT DEFAULT '[]',
     careers TEXT DEFAULT '[]', higher_studies TEXT DEFAULT '[]', req12 TEXT,
-    is_sample INTEGER NOT NULL DEFAULT 1, source TEXT DEFAULT 'Fictional prototype data', last_updated TEXT);
+    is_sample INTEGER NOT NULL DEFAULT 1, source TEXT DEFAULT 'Fictional prototype data', last_updated TEXT,
+    published INTEGER NOT NULL DEFAULT 1, specialisations TEXT DEFAULT '[]');
 CREATE TABLE IF NOT EXISTS catalogue_meta (key TEXT PRIMARY KEY, value TEXT);
 """
 _state = {"stamp": None, "problems": []}
@@ -66,10 +67,20 @@ def _dump(value) -> str | None:
 
 
 # ------------------------------------------------------------------ database
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Add columns introduced after the first release to an existing database."""
+    have = {r["name"] for r in conn.execute("PRAGMA table_info(courses)")}
+    for column, ddl in (("published", "INTEGER NOT NULL DEFAULT 1"), ("specialisations", "TEXT DEFAULT '[]'")):
+        if column not in have:
+            conn.execute(f"ALTER TABLE courses ADD COLUMN {column} {ddl}")
+
+
 def init_db() -> None:
     """Create the table and insert seed courses that were never inserted before (deleted ones stay deleted)."""
     with closing(_connect()) as conn:
         conn.executescript(_SCHEMA)
+        _migrate(conn)
+        conn.commit()
         row = conn.execute("SELECT value FROM catalogue_meta WHERE key = 'seeded_ids'").fetchone()
         seeded = set(json.loads(row[0])) if row else set()
         fresh = [(pos, c) for pos, c in enumerate(_SEED, start=1) if c["id"] not in seeded]
@@ -104,22 +115,55 @@ def _course(r: sqlite3.Row) -> dict:
         "diploma": r["diploma"] or None, "semesters": r["semesters"] or "", "admission_mode": r["admission_mode"] or "",
         "subjects": js("subjects", []), "procedure": js("procedure", []), "documents": js("documents", []),
         "careers": js("careers", []), "higher_studies": js("higher_studies", []), "req12": js("req12", None),
+        "specialisations": js("specialisations", []), "published": bool(r["published"]), "is_sample": bool(r["is_sample"]),
     }
 
 
-def load_courses() -> list[dict]:
-    """All valid courses. A row with unusable values (for example text in a fee column) is skipped, not shown
+def load_courses(published_only: bool = True) -> list[dict]:
+    """Valid courses (by default only the PUBLISHED ones, which is what the public site and assistant use). A row with unusable values (for example text in a fee column) is skipped, not shown
     with made-up numbers, and listed by problems() so it can be fixed."""
     init_db()
     courses, bad = [], []
     with closing(_connect()) as conn:
-        for r in conn.execute("SELECT * FROM courses ORDER BY position, rowid"):
+        where = "WHERE published = 1" if published_only else ""
+        for r in conn.execute(f"SELECT * FROM courses {where} ORDER BY position, rowid"):
             try:
                 courses.append(_course(r))
             except (ValueError, TypeError):
                 bad.append(r["id"])
     _state["problems"] = bad
     return courses
+
+
+def all_courses() -> list[dict]:
+    """Every course including unpublished drafts (administration only)."""
+    return load_courses(published_only=False)
+
+
+def course_name_taken(name: str, exclude_id: str | None = None) -> bool:
+    init_db()
+    with closing(_connect()) as conn:
+        row = conn.execute("SELECT id FROM courses WHERE lower(name) = lower(?) AND id != ?", (name.strip(), exclude_id or "")).fetchone()
+    return row is not None
+
+
+def new_course_id(name: str) -> str:
+    """A unique, URL-safe id made from the course name."""
+    base = re.sub(r"[^a-z0-9]+", "-", name.lower().replace("&", " and ")).strip("-")[:40] or "course"
+    init_db()
+    with closing(_connect()) as conn:
+        taken = {r[0] for r in conn.execute("SELECT id FROM courses")}
+    candidate, n = base, 2
+    while candidate in taken:
+        candidate, n = f"{base}-{n}", n + 1
+    return candidate
+
+
+def delete_course_row(course_id: str) -> None:
+    init_db()
+    with closing(_connect()) as conn, conn:
+        if conn.execute("DELETE FROM courses WHERE id = ?", (course_id,)).rowcount == 0:
+            raise ValueError(f"No course with id '{course_id}'")
 
 
 def problems() -> list[str]:
@@ -158,6 +202,8 @@ def update_course(course_id: str, **fields) -> None:
             value = _dump(list(value))
         elif key == "req12":
             value = _dump(value)
+        elif key in ("published", "is_sample"):
+            value = 1 if value else 0
         sets.append(f"{column} = ?")
         values.append(value)
     if not sets:

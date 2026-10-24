@@ -1,0 +1,17 @@
+# Databases hold admin hashes, enquiries and student registrations - never commit them
+*.db
+*.db-wal
+*.db-shm
+*.db.bak
+
+# Secrets (Gnani API key etc.)
+.streamlit/secrets.toml
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+data.py.bak

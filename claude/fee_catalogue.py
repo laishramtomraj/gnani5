@@ -10,6 +10,8 @@ How it fits the existing project
   * Information that is not available is stored as None and shown as "Not available". It is never guessed.
   * Calculations, validation and AI-ready records live in fee_logic.py.
 """
+from collections.abc import Mapping
+
 from data import COURSES
 from course_catalogue import BSC_APPLIED, BSC_CORE, BTECH_CORE, BTECH_SPECIAL, OTHER
 
@@ -89,7 +91,7 @@ def build_structure(course: dict) -> dict:
                   note="Taken from the course catalogue."),
         component("development", "Academic development fee", ACADEMIC, ANNUAL, p["development"]),
     ]
-    lab = LAB_FEE[course["id"]]
+    lab = LAB_FEE.get(course["id"], 0)          # a course added later has no lab fee until one is listed
     if lab:
         comps.append(component("lab", "Laboratory / practical fee", ACADEMIC, ANNUAL, lab))
     comps += [
@@ -112,7 +114,24 @@ def build_structure(course: dict) -> dict:
     return {"course_id": course["id"], "profile": profile_for(course), "components": comps}
 
 
-FEE_STRUCTURES = {c["id"]: build_structure(c) for c in COURSES}
+class _LiveStructures(Mapping):
+    """Fee structures built from the CURRENT course list on every access, so a fee or course changed in
+    college.db (or by the admin dashboard) is never out of date, and a new course never breaks the import."""
+
+    def __getitem__(self, course_id):
+        for c in COURSES:
+            if c["id"] == course_id:
+                return build_structure(c)
+        raise KeyError(course_id)
+
+    def __iter__(self):
+        return iter([c["id"] for c in COURSES])
+
+    def __len__(self):
+        return len(COURSES)
+
+
+FEE_STRUCTURES = _LiveStructures()
 
 # ---------------------------------------------------------------- facilities
 # Same for every course. Shown separately from compulsory fees; the student chooses what applies.

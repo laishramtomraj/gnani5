@@ -1,7 +1,8 @@
 import streamlit as st
 
+import content_db
 from components import section_header
-from data import ACHIEVEMENTS, COURSES, DATA_IS_SAMPLE, ILLUSTRATIVE_ACHIEVEMENTS
+from data import ACHIEVEMENTS, COURSES, DATA_IS_SAMPLE
 from hero import render_hero
 
 # ------------------------------------------------------------------ HERO
@@ -10,7 +11,7 @@ render_hero()
 st.write("")
 
 # --------------------------------------------------------------- PILLARS
-section_header("Why us", "Education That Prepares You for What's Next")
+section_header("Why us", content_db.text("home_why_heading"))
 pillars = [
     (":material/school:", "Education", "Structured programmes built on academic depth and real-world relevance."),
     (":material/lightbulb:", "Innovation", "An environment that encourages projects, research and new ideas."),
@@ -25,32 +26,23 @@ for col, (icon, title, text) in zip(st.columns(4), pillars):
 st.write("")
 
 # ---------------------------------------------------------- ACHIEVEMENTS
-section_header(
-    "Highlights",
-    "Our Achievements",
-    "A snapshot of academic, research, industry and student-life accomplishments. "
-    "The figures below are illustrative prototype data and can be replaced with verified college information.",
-)
-
-achievements = ACHIEVEMENTS or ILLUSTRATIVE_ACHIEVEMENTS
-
-for row_start in range(0, len(achievements), 3):
-    row = achievements[row_start:row_start + 3]
-    for col, item in zip(st.columns(3), row):
+section_header("Highlights", content_db.text("home_achievements_heading"))
+if ACHIEVEMENTS:
+    shown = ACHIEVEMENTS[:4]
+    for col, item in zip(st.columns(len(shown)), shown):
         with col.container(border=True):
-            st.markdown(f"#### {item['icon']} {item['title']}")
-            st.metric(item["title"], item["value"], label_visibility="collapsed")
-            st.write(item["description"])
+            st.metric(item["label"], item["value"], help=item["source"] or None)
+    if len(ACHIEVEMENTS) > len(shown):
+        st.page_link("views/about.py", label="See all achievements", icon=":material/arrow_forward:")
+else:
+    for col, label in zip(st.columns(4), ["Placement statistic", "Accreditation", "Award or ranking", "Students enrolled"]):
+        with col.container(border=True):
+            st.metric(label, "—", help="Add verified data in data.py (ACHIEVEMENTS).")
 
-if not ACHIEVEMENTS:
-    st.caption(
-        "Illustrative prototype data only. Add verified achievements to "
-        "`ACHIEVEMENTS` in `data.py` before publishing."
-    )
 st.write("")
 
 # --------------------------------------------------------- COURSE PREVIEW
-section_header("Programmes", "Explore Courses")
+section_header("Programmes", content_db.text("home_programmes_heading"))
 groups: dict[str, list[str]] = {}
 for c in COURSES:
     groups.setdefault(c["category"], []).append(c["name"])
@@ -63,20 +55,3 @@ for col, (category, names) in zip(st.columns(len(groups)), groups.items()):
         extra = f" and {len(names) - 3} more" if len(names) > 3 else ""
         st.write(shown + extra)
         st.page_link("views/courses.py", label="View details", icon=":material/arrow_forward:")
-if DATA_IS_SAMPLE:
-    st.caption("Programme list is illustrative sample data, not a claim about a real college.")
-
-st.write("")
-
-# ------------------------------------------------------------ REGISTER CTA
-with st.container(border=True):
-    left, right = st.columns([3, 1], vertical_alignment="center")
-    with left:
-        st.subheader("Ready to Begin?", anchor=False)
-        st.write(
-            "Choose a course, complete the registration form, and the admissions "
-            "team will review your application."
-        )
-    with right:
-        if st.button("Begin Registration", type="primary", width="stretch", key="cta_register"):
-            st.switch_page("views/admissions.py")

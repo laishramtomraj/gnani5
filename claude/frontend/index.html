@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College Admission Assistant</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- College Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-avatar">🎓</div>
+        <div>
+          <h1 class="brand-title">Admission Assistant</h1>
+          <p class="brand-subtitle">Database-grounded College Guidance Portal</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <label class="toggle-control" title="Automatically read incoming answers aloud">
+          <input type="checkbox" id="autoSpeakToggle">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Auto-speak</span>
+        </label>
+        <button id="newChatBtn" class="btn btn-secondary" title="Reset conversation">
+          <span class="btn-icon">↺</span> New conversation
+        </button>
+      </div>
+    </header>
+
+    <!-- Automation Notice -->
+    <div class="automation-banner">
+      <span class="banner-icon">ℹ️</span>
+      <span>I am an automated assistant. For official admission advice, please contact the college.</span>
+    </div>
+
+        <!-- Error Toast Notification -->
+    <div id="errorBanner" class="error-banner" style="display: none;" role="alert">
+      <span id="errorMessage">Cannot connect to the assistant server.</span>
+      <button id="retryBtn" class="btn btn-retry">Retry</button>
+    </div>
+
+    <!-- Chat Messages Window -->
+    <main class="chat-viewport" id="chatViewport" aria-live="polite">
+      <div class="welcome-card" id="welcomeCard">
+        <h2>Welcome to College Admissions!</h2>
+        <p>I can help you explore courses, fee structures, eligibility requirements, and the application procedure. Ask in <strong>English, Hindi, or Hinglish</strong>.</p>
+        <div class="suggestion-group">
+          <p class="suggestion-title">Suggested questions:</p>
+          <div class="chips-container" id="initialChips">
+            <button class="chip" data-query="Which B.Tech courses are available?">Which B.Tech courses are available?</button>
+            <button class="chip" data-query="BCA ki fees kitni hai?">BCA ki fees kitni hai?</button>
+            <button class="chip" data-query="Am I eligible for B.Tech CSE with 75%?">Am I eligible for B.Tech CSE with 75%?</button>
+            <button class="chip" data-query="What is the admission procedure?">What is the admission procedure?</button>
+            <button class="chip" data-query="How to contact admissions desk?">How to contact admissions desk?</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="messagesList" class="messages-list"></div>
+
+      <!-- Typing Indicator -->
+      <div id="typingIndicator" class="typing-indicator hidden">
+        <div class="avatar">🎓</div>
+        <div class="typing-bubble">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Chat Input Area -->
+    <footer class="chat-footer">
+      <div class="input-container">
+        <textarea
+          id="chatInput"
+          placeholder="Ask a question about courses, fees, or eligibility... (Shift+Enter for newline)"
+          rows="1"
+          maxlength="500"
+          aria-label="Ask a question"
+        ></textarea>
+        <div class="input-actions">
+          <button id="stopBtn" class="btn btn-stop hidden" title="Stop generating">
+            ■ Stop
+          </button>
+          <button id="sendBtn" class="btn btn-primary" title="Send message (Enter)">
+            Send
+          </button>
+        </div>
+      </div>
+      <div class="input-meta">
+        <span id="charCounter">0/500</span>
+        <span class="keyboard-hint">Press <strong>Enter</strong> to send, <strong>Shift+Enter</strong> for a new line</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Audio playback element -->
+  <audio id="ttsAudio" preload="none"></audio>
+
+  <script src="app.js"></script>
+</body>
+</html>

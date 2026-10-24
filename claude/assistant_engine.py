@@ -9,6 +9,23 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from difflib import SequenceMatcher
+from enum import Enum
+
+USE_MODERN_RESOLVER: bool = True
+
+
+class Outcome(str, Enum):
+    ELIGIBLE = "meets"
+    INELIGIBLE = "not_meet"
+    INSUFFICIENT = "insufficient"
+    CONDITIONAL = "conditional"
+
+
+class CriterionStatus(str, Enum):
+    MET = "met"
+    NOT_MET = "not_met"
+    UNKNOWN = "unknown"
+
 
 from course_catalogue import COURSES, DOCS_PG, DOCS_UG, GROUPS, PROCEDURE
 from data import format_inr
@@ -147,7 +164,7 @@ S = {
         "Final eligibility and any entrance test are confirmed by the college. This is not a guarantee of admission.",
         "अंतिम पात्रता और प्रवेश परीक्षा (यदि हो) की पुष्टि कॉलेज करता है। यह प्रवेश की गारंटी नहीं है।",
         "Final eligibility aur entrance test (agar ho) college confirm karta hai. Yeh admission ki guarantee nahi hai."),
-    "d_fee": _t("{name}: annual tuition is {annual} (total tuition for {n} years: {total}).",
+    "d_fee": _t("{name}: annual tuition fee is {annual} (total tuition for {n} years: {total}).",
                 "{name}: वार्षिक ट्यूशन फीस {annual} है ({n} वर्ष की कुल ट्यूशन फीस: {total})।",
                 "{name}: annual tuition fee {annual} hai ({n} saal ki total tuition fee: {total})."),
     "d_seats": _t("{name} lists {seats} sample seats (an illustrative intake target, not live availability).",
@@ -250,7 +267,7 @@ S = {
 }
 
 LBL = {
-    "en": dict(duration="Duration", annual="Annual tuition", total="Total tuition ({n} years)", seats="Seats (sample intake)",
+    "en": dict(duration="Duration", annual="Annual tuition fee", total="Total tuition ({n} years)", seats="Seats (sample intake)",
                minmarks="Minimum marks", class12="Class 12 subjects", degree="Bachelor's degree", dept="Department", docs_label="Documents",
                subjects="Major subjects", careers="Careers", higher="Higher study", mode="Admission mode",
                semesters="Semester structure", years="{n} years", qual="Qualifications", spec="Specialization",
@@ -438,6 +455,24 @@ def _groups() -> list[str]:
     return list(GROUPS) + [g for g in dict.fromkeys(c["group"] for c in COURSES) if g not in GROUPS]
 
 
+def _closest_alias(n: str):
+    """Typo tolerance: difflib SequenceMatcher on known catalogue aliases with similarity threshold."""
+    tokens = [t for t in n.split() if t not in _STOP and len(t) >= 3]
+    best_ratio = 0.0
+    best_alias = None
+    best_cid = None
+    for token in tokens:
+        for alias, ids in _ALIASES.items():
+            if len(ids) == 1 and len(alias) >= 2:
+                ratio = SequenceMatcher(None, token, alias).ratio()
+                if ratio > best_ratio:
+                    best_ratio = ratio
+                    best_alias = alias
+                    best_cid = ids[0]
+    return best_ratio, best_alias, best_cid
+
+
+
 _OPTION_WORDS = [(r"\b(first|1st|1|one|pehla|pehle)\b|पहला|पहले", 0), (r"\b(second|2nd|2|two|doosra|dusra|doosre)\b|दूसरा|दूसरे", 1)]
 
 
@@ -532,13 +567,14 @@ def parse_profile(n: str, raw: str) -> dict:
 
 def parse_amount(n: str):
     s = re.sub(r"\d+(?:\.\d+)?\s*(?:%|percent|percentage|प्रतिशत)", " ", n)
+    s = re.sub(r"(?<=\d),(?=\d)", "", s)
     m = re.search(r"(\d+(?:\.\d+)?)\s*(?:lakh|lakhs|lac|lacs|लाख)", s)
     if m:
         return int(float(m.group(1)) * 100000)
     m = re.search(r"(\d+(?:\.\d+)?)\s*(?:k|thousand|hazaar|hazar|हज़ार|हजार)\b", s)
     if m:
         return int(float(m.group(1)) * 1000)
-    m = re.search(r"(?:₹|rs\.?|inr)\s*(\d{4,9})", s) or re.search(r"\b(\d{5,9})\b", s)
+    m = re.search(r"(?:₹|rs\.?|inr)?\s*(\d{4,9})", s) or re.search(r"\b(\d{5,9})\b", s)
     return int(m.group(1)) if m else None
 
 
@@ -913,7 +949,14 @@ def _closest(n: str):
 
 # ============================================================== main entry
 def new_state() -> dict:
-    return {"lang": "en", "profile": {}, "pending": None, "last_course": None}
+    return {
+        "lang": "en",
+        "profile": {},
+        "pending": None,
+        "last_course": None,
+        "last_aspects": [],
+        "last_topic": None,
+    }
 
 
 def _pick_option(n, raw, options):
@@ -942,24 +985,43 @@ def respond(message: str, state: dict, directory: dict | None = None, _forced: l
     if _GREET.match(n):
         return Reply(T(lang, "greet"), _link(lang, "explore"), lang)
 
-    # ---- answer to an earlier "which one do you mean?"
+    # ---- answer to an earlier "which one do you mean?" or confirmation
     pend = state.get("pending")
     if pend and pend["type"] == "clarify" and _forced is None:
-        choice = _pick_option(n, raw, pend["options"])
+        if n in ("yes", "haan", "ha", "y", "correct", "sure", "sahi"):
+            choice = pend["options"][0] if pend.get("options") else None
+        else:
+            choice = _pick_option(n, raw, pend["options"])
         if choice:
             state["pending"] = None
-            return respond(pend["message"], state, directory, _forced=pend["resolved"] + [choice])
+            return respond(pend["message"], state, directory, _forced=pend.get("resolved", []) + [choice])
 
     ctx = bool(_CTX.search(n))
     resolved, ambiguous, spans = find_courses(n, raw, ctx)
     if _forced is not None:
         resolved, ambiguous = list(dict.fromkeys(_forced)), []
-    prof_now = parse_profile(_mask(n, spans), raw) if (ctx or state.get("pending") or _DEG_PAT.search(n)) else {}
+
+    # ---- typo tolerance check if no course was matched
+    if USE_MODERN_RESOLVER and not resolved and not ambiguous and _forced is None:
+        best_ratio, best_alias, best_cid = _closest_alias(n)
+        if 0.70 <= best_ratio < 1.0 and best_cid:
+            state["pending"] = {"type": "clarify", "options": [best_cid], "message": raw, "resolved": [best_cid]}
+            c = BY_ID[best_cid]
+            return Reply(f"Did you mean {c['name']}?", None, lang)
+
+    prof_now = parse_profile(_mask(n, spans), raw) if (ctx or state.get("pending") or _DEG_PAT.search(n) or re.search(r"(\d{2,3}(?:\.\d+)?)\s*%", raw) or re.search(r"\b\d{2}\b", raw)) else {}
     if prof_now.get("degree_name") and _forced is None:   # "I completed BCA": the degree held is not the course asked about
         held = _ALIASES.get(prof_now["degree_name"], [])
         resolved = [i for i in resolved if not (len(held) == 1 and i == held[0])]
     prof = state["profile"]
     prof.update(prof_now)
+
+    # ---- profile correction / update check
+    if USE_MODERN_RESOLVER and prof_now.get("percent") is not None and not resolved and state.get("last_course"):
+        c = BY_ID[state["last_course"]]
+        reply, missing = r_eligibility(lang, c, prof)
+        state["pending"] = {"type": "elig", "course": c["id"]} if missing else None
+        return reply
 
     if R["exclusion"].search(n):
         items = [f"- {x.strip()}" for x in T(lang, "excl_items").split(";")]
@@ -984,6 +1046,7 @@ def respond(message: str, state: dict, directory: dict | None = None, _forced: l
             if any(re.search(rf"(?<![a-z0-9]){re.escape(t)}(?![a-z0-9])", n) for t in toks):
                 names.append(f)
     if R["faculty"].search(n) or names:
+        state["last_topic"] = "faculty"
         if directory is None:
             return Reply(T(lang, "fac_unavailable") + "\n\n" + T(lang, "n_contact"), _link(lang, "contact"), lang)
         contact = bool(re.search(r"\b(email|mail|contact|phone|office|hours|consultation)\b", n))
@@ -1037,8 +1100,27 @@ def respond(message: str, state: dict, directory: dict | None = None, _forced: l
     if R["compare"].search(n):
         return r_compare(lang, [BY_ID[i] for i in resolved])
 
-    # ---- eligibility
+    aspects = [k for k in ASPECT_ORDER if R[k].search(n)]
     elig_q = bool(R["elig"].search(n))
+
+    # ---- course switch: "same for BBA"
+    is_switch = bool(re.search(r"\b(same for|what about|and for|aur|same in|same with)\b", n))
+    if is_switch and resolved and not aspects and state.get("last_aspects"):
+        aspects = list(state["last_aspects"])
+
+    # ---- context follow-up on active course
+    if not resolved and not ambiguous and state.get("last_course"):
+        # "tell me more"
+        if re.search(r"\b(tell me more|more details|more info|aur batao|aur jankari|details)\b", n) or n.strip() == "more":
+            c = BY_ID[state["last_course"]]
+            state["last_aspects"] = ["summary", "duration", "subjects", "careers"]
+            return r_course_details(lang, c, state["last_aspects"], directory)
+        if elig_q:
+            resolved = [state["last_course"]]
+        elif aspects and not _closest(n)[0]:
+            resolved = [state["last_course"]]
+
+    # ---- eligibility
     pending_elig = pend if (pend and pend["type"] == "elig") else None
     if resolved and (elig_q or (pending_elig and prof_now and not R["fee"].search(n))) or (not resolved and pending_elig and prof_now):
         c = BY_ID[resolved[0] if resolved else pending_elig["course"]]
@@ -1047,14 +1129,21 @@ def respond(message: str, state: dict, directory: dict | None = None, _forced: l
             reply, missing = r_eligibility(lang, c, prof)
             state["pending"] = {"type": "elig", "course": c["id"]} if missing else None
             state["last_course"] = c["id"]
+            state["last_aspects"] = ["elig"]
             return reply
         if personal:
             state["pending"] = {"type": "elig", "course": c["id"]}
-        state["last_course"] = c["id"]
-        reply = r_course_details(lang, c, ["elig"], directory)
-        if personal:
+            state["last_course"] = c["id"]
+            state["last_aspects"] = ["elig"]
+            reply = r_course_details(lang, c, aspects if aspects else ["elig"], directory)
             reply.text += "\n\n" + T(lang, "ask_profile", missing=T(lang, "and").join([T(lang, "m_subjects"), T(lang, "m_percent")]))
-        return reply
+            return reply
+        # Multi-intent non-personal query
+        state["last_course"] = c["id"]
+        use_aspects = aspects if aspects else ["elig"]
+        state["last_aspects"] = use_aspects
+        return r_course_details(lang, c, use_aspects, directory)
+
     if elig_q and not resolved:
         if (prof.get("subjects") or prof.get("stream")) and (R["personal"].search(n) or prof_now):
             return r_stream(lang, prof)
@@ -1084,10 +1173,12 @@ def respond(message: str, state: dict, directory: dict | None = None, _forced: l
 
     # ---- admission / registration / documents
     wants_docs = bool(R["docs"].search(n))
-    aspects = [k for k in ASPECT_ORDER if R[k].search(n)]
     if R["admission"].search(n) and not (resolved and aspects):
         return r_admission(lang, BY_ID[resolved[0]] if resolved else None, wants_docs)
     if wants_docs and not resolved:
+        if state.get("last_course"):
+            c = BY_ID[state["last_course"]]
+            return r_course_details(lang, c, ["docs"], directory)
         return r_admission(lang, None, True)
 
     # ---- course aspects (fee, seats, duration, ...)
@@ -1096,6 +1187,7 @@ def respond(message: str, state: dict, directory: dict | None = None, _forced: l
     if resolved:
         c = BY_ID[resolved[0]]
         state["last_course"] = c["id"]
+        state["last_aspects"] = aspects
         return r_course_details(lang, c, aspects, directory)
 
     # ---- discovery / listing

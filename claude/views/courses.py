@@ -1,5 +1,6 @@
 import streamlit as st
 
+import content_db
 import faculty_db
 from course_catalogue import GROUPS
 from data import COURSES, DATA_NOTICE, format_inr
@@ -68,7 +69,8 @@ def grid(items: list[dict]) -> None:
 # ------------------------------------------------------------ list view
 def catalogue() -> None:
     st.title("Courses", anchor=False)
-    st.info(DATA_NOTICE, icon=":material/info:")
+    if content_db.text("show_prototype_notice"):
+        st.info(DATA_NOTICE, icon=":material/info:")
 
     f1, f2 = st.columns([3, 1])
     query = f1.text_input("Search", placeholder="e.g. Physics, Computer, MBA")
@@ -117,7 +119,8 @@ def detail(c: dict) -> None:
     st.button("All courses", icon=":material/arrow_back:", on_click=_close, key="back_to_courses")
     st.title(c["name"], anchor=False)
     st.caption(f"{c['group']} · {c['level']} · Illustrative prototype data")
-    st.info(DATA_NOTICE, icon=":material/info:")
+    if content_db.text("show_prototype_notice"):
+        st.info(DATA_NOTICE, icon=":material/info:")
 
     total = c["tuition"] * c["years"]
     m1, m2, m3, m4 = st.columns(4)
@@ -137,6 +140,9 @@ def detail(c: dict) -> None:
 
     with overview:
         st.write(c["overview"])
+        if c.get("specialisations"):
+            st.markdown("**Specialisations**")
+            bullets(c["specialisations"])
         st.markdown("**Major subjects**")
         bullets(c["subjects"])
         st.markdown("**Duration and semester structure**")

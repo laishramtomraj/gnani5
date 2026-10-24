@@ -3,6 +3,7 @@ import io
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
+import content_db
 import faculty_db
 from data import BASE_DIR
 from faculty_seed import SAMPLE_NOTICE
@@ -89,6 +90,8 @@ def profile_dialog(f: dict) -> None:
 
     overview, teaching, contact = st.tabs(["Overview", "Teaching & research", "Contact"])
     with overview:
+        if f.get("description"):
+            st.write(f["description"])
         st.write(f"**Qualifications:** {f['qualifications'] or NONE}")
         st.write(f"**Specialization:** {f['specialization'] or NONE}")
         st.write(f"**Experience:** {experience(f)}")
@@ -144,7 +147,8 @@ def grid(items: list[dict]) -> None:
 
 # ------------------------------------------------------------------- page
 st.title("Faculty", anchor=False)
-st.info(SAMPLE_NOTICE, icon=":material/info:")
+if content_db.text("show_prototype_notice") and any(f["is_sample"] for f in people):
+    st.info(SAMPLE_NOTICE, icon=":material/info:")
 
 c1, c2, c3, c4 = st.columns([2, 2, 1.5, 2])
 query = c1.text_input("Search by name", placeholder="e.g. Menon").strip().casefold()

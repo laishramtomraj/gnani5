@@ -7,6 +7,8 @@ academic illustration is used. No institutional facts are invented.
 import io
 
 import streamlit as st
+
+import content_db
 from PIL import Image, ImageDraw, ImageOps
 
 from data import COLLEGE, find_hero_image
@@ -66,11 +68,8 @@ def render_hero() -> None:
         left, right = st.columns([1.15, 1], gap="large", vertical_alignment="center")
         with left:
             st.badge(f"Welcome to {COLLEGE['name']}", icon=":material/school:", color="green")
-            st.title("Discover Your Future.  \nBegin Your Journey.", anchor=False)
-            st.write(
-                "A modern learning environment built around education, innovation, "
-                "student development, and real-world opportunities."
-            )
+            st.title(content_db.text("home_headline").replace("\n", "  \n"), anchor=False)
+            st.write(content_db.text("home_intro"))
             b1, b2 = st.columns(2)
             if b1.button("Explore Courses", type="primary", width="stretch", key="hero_courses"):
                 st.switch_page("views/courses.py")
