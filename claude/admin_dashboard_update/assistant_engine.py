@@ -1090,6 +1090,7 @@ def respond(message: str, state: dict, directory: dict | None = None, _forced: l
     # ---- admission / registration / documents
     wants_docs = bool(R["docs"].search(n))
     aspects = [k for k in ASPECT_ORDER if R[k].search(n)]
+    if R["admission"].search(n) and not (resolved and aspects):
         return r_admission(lang, BY_ID[resolved[0]] if resolved else None, wants_docs)
     if wants_docs and not resolved:
         return r_admission(lang, None, True)
