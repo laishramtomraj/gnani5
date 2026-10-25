@@ -1,9 +1,9 @@
 [theme]
 base = "light"
-primaryColor = "#19A7A0"            # teal accent (buttons, links)
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F3F6FA"
-textColor = "#0B1F3F"               # navy
+primaryColor = "#0E7490"
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#0B1220"
 font = "sans serif"
 
 [client]

@@ -55,6 +55,9 @@ st.set_page_config(
     page_icon="🎓",
     layout="wide",
 )
+from styles import apply_theme
+
+apply_theme()
 
 pages = [
     st.Page("views/home.py", title="Home", icon=":material/home:", default=True),
