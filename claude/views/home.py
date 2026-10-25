@@ -6,18 +6,9 @@ from hero import render_hero
 
 # ------------------------------------------------------------------ TOP ALERT BANNER
 st.html("""
-<div style="
-    background: linear-gradient(90deg, #19A7A0 0%, #0072B2 100%);
-    padding: 10px 20px;
-    border-radius: 50px;
-    color: white;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(25, 167, 160, 0.25);
-    margin-bottom: 1.5rem;
-">
-    🎓 Admissions Open for Academic Session 2026–27 • Merit & Entrance Pathways Available
+<div class="admissions-ribbon">
+    <span aria-hidden="true">🎓</span>
+    <span>Admissions Open for Academic Session 2026–27 · Merit &amp; Entrance Pathways Available</span>
 </div>
 """)
 
@@ -80,19 +71,11 @@ cols = st.columns(4)
 for col, p in zip(cols, pillars):
     with col:
         st.html(f"""
-        <div style="
-            background-color: {p['bg']};
-            border-left: 5px solid {p['border']};
-            padding: 20px 16px;
-            border-radius: 12px;
-            min-height: 200px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            margin-bottom: 10px;
-        ">
-            <div style="font-size: 2rem; margin-bottom: 8px;">{p['icon']}</div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: #0B1F3F; margin-bottom: 8px;">{p['title']}</div>
-            <div style="font-size: 0.9rem; color: #334E68; line-height: 1.45;">{p['text']}</div>
-        </div>
+        <article class="feature-card" style="--feature-bg: {p['bg']}; --feature-accent: {p['border']};">
+            <div class="feature-card__icon" aria-hidden="true">{p['icon']}</div>
+            <div class="feature-card__title">{p['title']}</div>
+            <div class="feature-card__text">{p['text']}</div>
+        </article>
         """)
 
 st.write("")
@@ -132,17 +115,7 @@ for col, (category, names) in zip(st.columns(len(groups)), groups.items()):
     bg, fg = badge_colors.get(category, ("#F3F6FA", "#0B1F3F"))
     with col.container(border=True):
         st.html(f"""
-        <div style="
-            display: inline-block;
-            background-color: {bg};
-            color: {fg};
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            margin-bottom: 12px;
-        ">
+        <div class="category-chip" style="--category-bg: {bg}; --category-fg: {fg};">
             {category.upper()}
         </div>
         """)
@@ -156,23 +129,12 @@ st.write("")
 
 # ------------------------------------------------------------ READY TO BEGIN CTA
 st.html("""
-<div style="
-    background: linear-gradient(135deg, #0B1F3F 0%, #153E75 60%, #19A7A0 100%);
-    border-radius: 18px;
-    padding: 36px 32px;
-    color: white;
-    box-shadow: 0 10px 25px rgba(11, 31, 63, 0.2);
-    margin-top: 1rem;
-">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-        <div style="max-width: 650px;">
-            <div style="font-size: 1.8rem; font-weight: 800; margin-bottom: 8px;">Ready to Begin Your Journey?</div>
-            <div style="font-size: 1rem; opacity: 0.9; line-height: 1.5;">
-                Registration takes only 5 minutes. Check eligibility, explore fee concessions, and submit your application online.
-            </div>
-        </div>
+<section class="cta-band">
+    <div class="cta-band__title">Ready to Begin Your Journey?</div>
+    <div class="cta-band__text">
+        Registration takes only 5 minutes. Check eligibility, explore fee concessions, and submit your application online.
     </div>
-</div>
+</section>
 """)
 
 btn_col1, btn_col2, _ = st.columns([1.5, 1.5, 3])

@@ -64,7 +64,7 @@ def render_hero() -> None:
     photo = find_hero_image()
     banner = _banner_png(str(photo) if photo else None, photo.stat().st_mtime if photo else None)
 
-    with st.container(border=True):
+    with st.container(border=True, key="home_hero"):
         left, right = st.columns([1.15, 1], gap="large", vertical_alignment="center")
         with left:
             st.badge(f"Welcome to {COLLEGE['name']}", icon=":material/school:", color="green")

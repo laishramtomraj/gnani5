@@ -1,23 +1,24 @@
 /* frontend/style.css - Polished, accessible, responsive styling */
 :root {
-  --primary: #1a73e8;
-  --primary-hover: #1557b0;
-  --bg-page: #f8f9fa;
+  --primary: #0f8493;
+  --primary-hover: #155e75;
+  --accent: #2dd4bf;
+  --bg-page: #f2f6fa;
   --bg-card: #ffffff;
-  --text-main: #202124;
-  --text-muted: #5f6368;
-  --border: #dadce0;
-  --assistant-bubble: #f1f3f4;
-  --user-bubble: #1a73e8;
+  --text-main: #0b1f3f;
+  --text-muted: #526176;
+  --border: #e1e8f0;
+  --assistant-bubble: #f0f7f8;
+  --user-bubble: #155e75;
   --user-text: #ffffff;
-  --chip-bg: #e8f0fe;
-  --chip-text: #174ea6;
-  --chip-hover: #d2e3fc;
-  --error-bg: #fce8e6;
-  --error-text: #c5221f;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --chip-bg: #e3f5f6;
+  --chip-text: #155e75;
+  --chip-hover: #ccebed;
+  --error-bg: #fff0ef;
+  --error-text: #a52822;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -29,10 +30,15 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-page);
+  background:
+    radial-gradient(900px 520px at 10% -12%, rgba(15, 132, 147, 0.10), transparent 64%),
+    radial-gradient(760px 440px at 100% 0%, rgba(21, 94, 117, 0.07), transparent 60%),
+    var(--bg-page);
   color: var(--text-main);
-  line-height: 1.5;
+  line-height: 1.55;
+  min-height: 100vh;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   justify-content: center;
 }
@@ -44,7 +50,8 @@ body {
   background-color: var(--bg-card);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border-inline: 1px solid rgba(225, 232, 240, 0.8);
+  box-shadow: 0 18px 52px rgba(11, 31, 63, 0.09);
 }
 
 /* Header */
@@ -54,7 +61,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
 }
 
 .header-brand {
@@ -130,7 +137,7 @@ body {
 
 /* Automation Banner */
 .automation-banner {
-  background-color: #f1f3f4;
+  background: linear-gradient(90deg, #f4f8fb 0%, #eef7f8 100%);
   color: var(--text-muted);
   font-size: 0.8rem;
   padding: 8px 24px;
@@ -166,7 +173,7 @@ body {
 }
 
 .welcome-card {
-  background-color: #f8f9fa;
+  background: linear-gradient(155deg, #ffffff 0%, #f5fafb 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 20px;
@@ -256,13 +263,15 @@ body {
 }
 
 .message-row.user .message-bubble {
-  background-color: var(--user-bubble);
+  background: linear-gradient(145deg, #155e75 0%, #0f8493 100%);
   color: var(--user-text);
+  box-shadow: 0 6px 18px rgba(15, 132, 147, 0.14);
   border-bottom-right-radius: 4px;
 }
 
 .message-row.assistant .message-bubble {
-  background-color: var(--assistant-bubble);
+  background: var(--assistant-bubble);
+  border: 1px solid rgba(225, 232, 240, 0.85);
   color: var(--text-main);
   border-bottom-left-radius: 4px;
 }
@@ -425,12 +434,15 @@ textarea#chatInput {
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: #ffffff;
+  box-shadow: 0 5px 14px rgba(15, 132, 147, 0.19);
 }
 
 .btn-primary:hover {
   background-color: var(--primary-hover);
+  box-shadow: 0 7px 18px rgba(15, 132, 147, 0.22);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -467,6 +479,18 @@ textarea#chatInput {
 @media (max-width: 600px) {
   .app-header {
     padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-controls {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .automation-banner {
+    padding: 9px 16px;
+    align-items: flex-start;
   }
   .brand-title {
     font-size: 1rem;
@@ -482,5 +506,35 @@ textarea#chatInput {
   }
   .keyboard-hint {
     display: none;
+  }
+}
+
+
+/* Consistent focus, disabled and reduced-motion states */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid rgba(15, 132, 147, 0.38);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.chat-viewport {
+  scrollbar-color: #c8d6e1 transparent;
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
   }
 }

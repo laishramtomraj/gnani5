@@ -51,56 +51,67 @@ def footer():
 
     st.html("""
 <style>
-/* Apply these styles only to the footer */
+/* Scoped premium footer treatment; all links and text remain native Streamlit elements. */
 .st-key-college_footer {
-    color: #111111;
+    color: #E2E8F0;
+    background: linear-gradient(145deg, #0B1F3F 0%, #102D52 72%, #124B5A 100%);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 24px;
+    padding: 1.5rem 1.5rem 1rem;
+    margin-top: 1rem;
+    box-shadow: 0 16px 34px rgba(11, 31, 63, 0.12);
 }
 
-/* Remove faded colours and reduced opacity */
-.st-key-college_footer :is(div, p, span, strong, small, a) {
-    color: #111111 !important;
+.st-key-college_footer :is(div, p, span, strong, small) {
+    color: #E2E8F0 !important;
     opacity: 1 !important;
 }
 
-/* Keep footer captions readable and in normal sentence case */
+.st-key-college_footer strong,
+.st-key-college_footer [data-testid="stMarkdownContainer"] strong {
+    color: #FFFFFF !important;
+}
+
 .st-key-college_footer [data-testid="stCaptionContainer"],
 .st-key-college_footer [data-testid="stCaptionContainer"] p {
-    color: #111111 !important;
-    font-size: 0.875rem !important;
+    color: #CBD5E1 !important;
+    font-size: 0.84rem !important;
     font-weight: 400 !important;
     letter-spacing: normal !important;
     text-transform: none !important;
     line-height: 1.65 !important;
 }
 
-/* Keep telephone and email links identifiable */
+.st-key-college_footer a,
 .st-key-college_footer a[href^="tel:"],
 .st-key-college_footer a[href^="mailto:"] {
-    color: #111111 !important;
+    color: #A5F3FC !important;
     font-weight: 600 !important;
+    text-decoration: none !important;
+    text-underline-offset: 3px;
+    transition: color 0.18s ease, text-decoration-color 0.18s ease;
+}
+
+.st-key-college_footer a:hover {
+    color: #FFFFFF !important;
     text-decoration: underline !important;
     text-underline-offset: 3px;
 }
 
-/* Navigation links */
-.st-key-college_footer [data-testid="stPageLink"] a {
-    color: #111111 !important;
+.st-key-college_footer a:focus-visible {
+    outline: 3px solid #67E8F9 !important;
+    outline-offset: 3px !important;
 }
 
 .st-key-college_footer [data-testid="stPageLink"] a:hover {
-    background-color: #E2E8F0 !important;
+    background-color: rgba(255, 255, 255, 0.10) !important;
 }
 
-.st-key-college_footer a:hover {
-    color: #000000 !important;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-/* Visible keyboard focus */
-.st-key-college_footer a:focus-visible {
-    outline: 3px solid #0E7490 !important;
-    outline-offset: 3px !important;
+@media (max-width: 768px) {
+    .st-key-college_footer {
+        padding: 1.2rem 1rem 0.8rem;
+        border-radius: 18px;
+    }
 }
 </style>
 """)

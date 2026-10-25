@@ -250,30 +250,8 @@ class CollegeAPIHandler(SimpleHTTPRequestHandler):
 # Server startup
 # --------------------------------------------------------------------
 
-# To this:
 def run(host: str = "127.0.0.1", port: int | None = None) -> None:
-    def run(host: str = "127.0.0.1", port: int | None = None) -> None:
-    if port is None:
-        port = int(os.environ.get("PORT", "8000"))
-
-    server = ThreadingHTTPServer((host, port), CollegeAPIHandler)
-
-    display_host = "localhost" if host in ("0.0.0.0", "127.0.0.1") else host
-    print(f"Assistant API & Frontend running at http://{display_host}:{port}/")
-    print(f"Gnani API key configured: {bool(GNANI_API_KEY)}")
-
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("Shutting down Assistant API...")
-    finally:
-        server.server_close()
-    """
-    Start the API server.
-
-    On deployment platforms, PORT is supplied by the host.
-    Locally, it defaults to 8000.
-    """
+    """Start the API server using the platform port or local default."""
     if port is None:
         port = int(os.environ.get("PORT", "8000"))
 

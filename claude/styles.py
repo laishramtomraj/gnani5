@@ -27,32 +27,32 @@ TOKENS = {
     "font_sans": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     "font_display": "'Fraunces', Georgia, 'Times New Roman', serif",
 
-    "navy": "#0B1220",
-    "ink": "#111827",
-    "muted": "#475569",
+    "navy": "#0B1F3F",
+    "ink": "#172436",
+    "muted": "#526176",
 
-    "teal": "#0E7490",
+    "teal": "#0F8493",
     "teal_dark": "#155E75",
-    "teal_soft": "#E0F2FE",
+    "teal_soft": "#E3F5F6",
     "blue_soft": "#EFF6FF",
 
     "surface": "#FFFFFF",
-    "surface_muted": "#F8FAFC",
-    "border": "#E2E8F0",
-    "border_strong": "#CBD5E1",
+    "surface_muted": "#F5F8FB",
+    "border": "#E3EAF1",
+    "border_strong": "#CCD7E3",
 
     "success": "#15803D",
     "warning": "#B45309",
     "danger": "#B91C1C",
 
-    "radius_sm": "10px",
-    "radius_md": "16px",
-    "radius_lg": "22px",
+    "radius_sm": "12px",
+    "radius_md": "18px",
+    "radius_lg": "24px",
     "radius_pill": "999px",
 
-    "shadow_sm": "0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.05)",
-    "shadow_md": "0 10px 30px rgba(15, 23, 42, 0.08)",
-    "shadow_brand": "0 8px 22px rgba(14, 116, 144, 0.24)",
+    "shadow_sm": "0 2px 8px rgba(15, 31, 63, 0.045), 0 8px 24px rgba(15, 31, 63, 0.035)",
+    "shadow_md": "0 14px 36px rgba(15, 31, 63, 0.10)",
+    "shadow_brand": "0 8px 24px rgba(15, 132, 147, 0.22)",
 }
 
 
@@ -72,9 +72,7 @@ def _css_variables() -> str:
 def _build_css() -> str:
     """Build the complete stylesheet once, then reuse it across reruns."""
     variables = _css_variables()
-    return f"""""
-
-   
+    return f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
 
@@ -104,13 +102,13 @@ html, body, [class*="st-"], .stMarkdown, button, input, textarea, select {{
 .stMainBlockContainer,
 .block-container {{
   width: 100%;
-  max-width: none !important;
+  max-width: 1520px !important;
   box-sizing: border-box;
   margin-inline: auto;
-  padding-top: 2.25rem;
-  padding-bottom: 3.5rem;
-  padding-left: clamp(1.5rem, 5vw, 6rem);
-  padding-right: clamp(1.5rem, 5vw, 6rem);
+  padding-top: clamp(1.5rem, 2.6vw, 2.5rem);
+  padding-bottom: clamp(2.5rem, 4vw, 4rem);
+  padding-left: clamp(1.25rem, 4vw, 4.25rem);
+  padding-right: clamp(1.25rem, 4vw, 4.25rem);
 }}
 
 h1, h2, h3, h4 {{
@@ -122,7 +120,7 @@ h1, h2, h3, h4 {{
 
 h1 {{
   font-family: var(--font-display);
-  font-size: clamp(2.15rem, 4vw, 3rem);
+  font-size: clamp(2.25rem, 4.2vw, 3.45rem);
   line-height: 1.08;
 }}
 
@@ -140,11 +138,11 @@ strong {{
 
 /* Section eyebrows created through st.caption */
 [data-testid="stCaptionContainer"] {{
-  color: var(--teal) !important;
-  font-size: 0.76rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.11em !important;
-  text-transform: uppercase;
+  color: var(--muted) !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none;
 }}
 
 /* -----------------------------------------------------------------------
@@ -152,14 +150,16 @@ strong {{
 ----------------------------------------------------------------------- */
 
 header[data-testid="stHeader"] {{
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: saturate(180%) blur(14px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: saturate(170%) blur(16px);
+  border-bottom: 1px solid rgba(227, 234, 241, 0.95);
+  box-shadow: 0 4px 20px rgba(15, 31, 63, 0.025);
 }}
 
 [data-testid="stTopNav"],
 nav[role="navigation"] {{
   border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.62);
 }}
 
 [data-testid="stPageLink"] a,
@@ -249,6 +249,12 @@ div[data-testid="stVerticalBlockBorderWrapper"] {{
   border-radius: var(--radius-lg) !important;
   box-shadow: var(--shadow-sm) !important;
   overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}}
+
+div[data-testid="stVerticalBlockBorderWrapper"]:hover {{
+  border-color: var(--border-strong) !important;
+  box-shadow: var(--shadow-md) !important;
 }}
 
 div[data-testid="stExpander"] summary {{
@@ -278,6 +284,165 @@ input:focus,
 textarea:focus {{
   border-color: var(--teal) !important;
   box-shadow: 0 0 0 4px rgba(14, 116, 144, 0.13) !important;
+}}
+
+/* -----------------------------------------------------------------------
+   Page shell, responsive columns and media
+----------------------------------------------------------------------- */
+
+.stApp [data-testid="stHorizontalBlock"] {{
+  gap: clamp(0.85rem, 1.8vw, 1.4rem);
+}}
+
+.stApp [data-testid="stImage"] img {{
+  border-radius: var(--radius-md);
+}}
+
+.stApp [data-testid="stTopNav"] a[aria-current="page"],
+.stApp [data-testid="stTopNav"] a[aria-selected="true"] {{
+  color: var(--teal-dark) !important;
+  background: var(--teal-soft) !important;
+  box-shadow: inset 0 0 0 1px rgba(15, 132, 147, 0.12);
+}}
+
+.stApp label,
+.stApp [data-testid="stWidgetLabel"] p {{
+  color: var(--ink);
+  font-weight: 600;
+}}
+
+.stApp [data-testid="stCaptionContainer"] p {{
+  line-height: 1.55;
+}}
+
+/* The homepage hero is keyed in hero.py so this treatment stays scoped. */
+.st-key-home_hero {{
+  border-radius: var(--radius-lg);
+}}
+
+.st-key-home_hero h1 {{
+  max-width: 15ch;
+  text-wrap: balance;
+}}
+
+.st-key-home_hero [data-testid="stImage"] img {{
+  border-radius: 18px;
+  box-shadow: 0 14px 34px rgba(11, 31, 63, 0.14);
+}}
+
+/* Homepage sections use shared classes instead of scattered inline styling. */
+.admissions-ribbon {{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin: 0 0 1.5rem;
+  padding: 0.8rem 1.15rem;
+  border: 1px solid rgba(15, 132, 147, 0.15);
+  border-radius: var(--radius-pill);
+  color: #FFFFFF;
+  background: linear-gradient(105deg, #0B1F3F 0%, #155E75 58%, #0F8493 100%);
+  box-shadow: 0 8px 22px rgba(11, 31, 63, 0.10);
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.45;
+  text-align: center;
+}}
+
+.feature-card {{
+  height: 100%;
+  min-height: 200px;
+  padding: 1.35rem 1.2rem;
+  border: 1px solid rgba(203, 213, 225, 0.75);
+  border-top: 3px solid var(--feature-accent, var(--teal));
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--feature-bg, #F4FAFB) 100%);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}}
+
+.feature-card:hover {{
+  border-color: var(--feature-accent, var(--teal));
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}}
+
+.feature-card__icon {{
+  margin-bottom: 0.65rem;
+  font-size: 1.8rem;
+  line-height: 1.2;
+}}
+
+.feature-card__title {{
+  margin-bottom: 0.55rem;
+  color: var(--navy);
+  font-size: 1.08rem;
+  font-weight: 750;
+  line-height: 1.3;
+}}
+
+.feature-card__text {{
+  color: var(--muted);
+  font-size: 0.91rem;
+  line-height: 1.65;
+}}
+
+.category-chip {{
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38rem 0.75rem;
+  margin-bottom: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--category-fg, var(--teal)) 18%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--category-bg, var(--teal-soft));
+  color: var(--category-fg, var(--teal-dark));
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}}
+
+.cta-band {{
+  margin-top: 1rem;
+  padding: clamp(1.5rem, 3.5vw, 2.5rem);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  color: #FFFFFF;
+  background:
+    radial-gradient(450px 220px at 100% 0%, rgba(45, 212, 191, 0.25), transparent 72%),
+    linear-gradient(125deg, #0B1F3F 0%, #153E75 62%, #0F8493 100%);
+  box-shadow: 0 16px 38px rgba(11, 31, 63, 0.16);
+}}
+
+.cta-band__title {{
+  margin-bottom: 0.5rem;
+  color: #FFFFFF;
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}}
+
+.cta-band__text {{
+  max-width: 68ch;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.98rem;
+  line-height: 1.7;
+}}
+
+/* Interactive status is visible without changing widget behaviour. */
+.stButton > button:disabled,
+.stDownloadButton > button:disabled,
+.stFormSubmitButton > button:disabled {{
+  cursor: not-allowed !important;
+  opacity: 0.52 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}}
+
+.stApp [data-testid="stSpinner"] p {{
+  color: var(--muted);
+  font-weight: 600;
 }}
 
 /* -----------------------------------------------------------------------
@@ -388,6 +553,24 @@ html {{
 
 /* Mobile */
 @media (max-width: 768px) {{
+  .stApp [data-testid="stHorizontalBlock"] {{
+    flex-wrap: wrap;
+  }}
+
+  .stApp [data-testid="stHorizontalBlock"] > [data-testid="column"] {{
+    min-width: min(100%, 250px) !important;
+    flex: 1 1 250px !important;
+  }}
+
+  .admissions-ribbon {{
+    border-radius: var(--radius-md);
+    padding: 0.8rem 0.95rem;
+    font-size: 0.84rem;
+  }}
+
+  .feature-card {{
+    min-height: auto;
+  }}
   .stMainBlockContainer,
   .block-container {{
     padding-left: 1rem;
