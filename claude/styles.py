@@ -84,7 +84,14 @@ def _build_css() -> str:
    Base typography and application canvas
 ----------------------------------------------------------------------- */
 
-html, body, [class*="st-"], .stMarkdown, button, input, textarea, select {{
+/* Apply the brand font to text-bearing roots and controls only. Avoid the
+   broad [class*="st-"] selector: Streamlit's Material Symbol icon elements can
+   carry generated st-* classes, and overriding their font turns ligatures
+   such as "home" and "arrow_forward" into visible text. */
+html, body, .stApp, .stMarkdown, [data-testid="stMarkdownContainer"],
+[data-testid="stCaptionContainer"], [data-testid="stWidgetLabel"],
+.stApp p, .stApp li, .stApp a, .stApp label,
+button, input, textarea, select {{
   font-family: var(--font-sans) !important;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
