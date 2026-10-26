@@ -8,19 +8,6 @@ import sys
 from pathlib import Path
 
 import streamlit as st
-st.set_page_config(
-    page_title="FirstWebCollege",
-    page_icon="🎓",
-    layout="wide"
-)
-
-st.markdown("""
-<style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    .stDeployButton {display: none;}
-</style>
-""", unsafe_allow_html=True)
 
 from config import get_gnani_api_key
 
@@ -87,6 +74,13 @@ nav = st.navigation(pages, position="top")
 
 from components import brand_header, footer
 
-brand_header()
+# The assistant gets a dedicated, distraction-free workspace. Keep the global
+# college header/footer on informational pages, but not around the chat page.
+is_assistant_page = nav.title == "Assistant"
+if not is_assistant_page:
+    brand_header()
+
 nav.run()
-footer()
+
+if not is_assistant_page:
+    footer()
